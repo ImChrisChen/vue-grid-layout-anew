@@ -21,7 +21,7 @@
             </div>-->
         </div>
         <div id="content">
-            <button @click="decreaseWidth">Decrease Width</button>
+            <button draggable="true" @dragstart="dragstart" @click="decreaseWidth">Decrease Width</button>
             <button @click="increaseWidth">Increase Width</button>
             <button @click="addItem">Add an item</button>
             <!-- Add to show rtl support -->
@@ -35,6 +35,7 @@
                 Row Height: <input type="number" v-model="rowHeight"/> Col nums: <input type="number" v-model="colNum"/>
             </div>
             <grid-layout
+                    @Drop="handleDrop"
                     :layout.sync="layout"
                     :col-num="parseInt(colNum)"
                     :row-height="rowHeight"
@@ -51,7 +52,7 @@
                     @layout-ready="layoutReadyEvent"
                     @layout-updated="layoutUpdatedEvent"
             >
-                <grid-item v-for="item in layout" :key="item.i"
+                <grid-item v-if="1" v-for="item in layout" :key="item.i"
                            :static="item.static"
                            :x="item.x"
                            :y="item.y"
@@ -67,6 +68,19 @@
                     <test-element :text="item.i"></test-element>
                     <!--<button @click="clicked">CLICK ME!</button>-->
                 </grid-item>
+                <grid-item v-else
+                           :key="0"
+                           :static="false"
+                           :x="0"
+                           :y="0"
+                           :w="2"
+                           :h="2"
+                           :i="0"
+                           @resize="resize"
+                           @move="move"
+                           @resized="resized"
+                           @moved="moved"
+                ></grid-item>
             </grid-layout>
             <hr/>
             <!--<grid-layout
@@ -102,30 +116,30 @@
     // import ResponsiveGridLayout from './components/ResponsiveGridLayout.vue';
     import TestElement from './components/TestElement.vue';
     import CustomDragElement from './components/CustomDragElement.vue';
-    import {getDocumentDir, setDocumentDir} from "./helpers/DOM";
+    import { getDocumentDir, setDocumentDir } from "./helpers/DOM";
     //var eventBus = require('./eventBus');
 
     let testLayout = [
-        {"x":0,"y":0,"w":2,"h":2,"i":"0", resizable: true, draggable: true, static: false},
-        {"x":2,"y":0,"w":2,"h":4,"i":"1", resizable: null, draggable: null, static: true},
-        {"x":4,"y":0,"w":2,"h":5,"i":"2", resizable: false, draggable: false, static: false},
-        {"x":6,"y":0,"w":2,"h":3,"i":"3", resizable: false, draggable: false, static: false},
-        {"x":8,"y":0,"w":2,"h":3,"i":"4", resizable: false, draggable: false, static: false},
-        {"x":10,"y":0,"w":2,"h":3,"i":"5", resizable: false, draggable: false, static: false},
-        {"x":0,"y":5,"w":2,"h":5,"i":"6", resizable: false, draggable: false, static: false},
-        {"x":2,"y":5,"w":2,"h":5,"i":"7", resizable: false, draggable: false, static: false},
-        {"x":4,"y":5,"w":2,"h":5,"i":"8", resizable: false, draggable: false, static: false},
-        {"x":6,"y":3,"w":2,"h":4,"i":"9", resizable: false, draggable: false, static: true},
-        {"x":8,"y":4,"w":2,"h":4,"i":"10", resizable: false, draggable: false, static: false},
-        {"x":10,"y":4,"w":2,"h":4,"i":"11", resizable: false, draggable: false, static: false},
-        {"x":0,"y":10,"w":2,"h":5,"i":"12", resizable: false, draggable: false, static: false},
-        {"x":2,"y":10,"w":2,"h":5,"i":"13", resizable: false, draggable: false, static: false},
-        {"x":4,"y":8,"w":2,"h":4,"i":"14", resizable: false, draggable: false, static: false},
-        {"x":6,"y":8,"w":2,"h":4,"i":"15", resizable: false, draggable: false, static: false},
-        {"x":8,"y":10,"w":2,"h":5,"i":"16", resizable: false, draggable: false, static: false},
-        {"x":10,"y":4,"w":2,"h":2,"i":"17", resizable: false, draggable: false, static: false},
-        {"x":0,"y":9,"w":2,"h":3,"i":"18", resizable: false, draggable: false, static: false},
-        {"x":2,"y":6,"w":2,"h":2,"i":"19", resizable: false, draggable: false, static: false}
+        { "x": 0, "y": 0, "w": 2, "h": 2, "i": "0", resizable: true, draggable: true, static: false },
+        { "x": 2, "y": 0, "w": 2, "h": 4, "i": "1", resizable: null, draggable: null, static: false },
+        { "x": 4, "y": 0, "w": 2, "h": 5, "i": "2", resizable: false, draggable: false, static: false },
+        { "x": 6, "y": 0, "w": 2, "h": 3, "i": "3", resizable: false, draggable: false, static: false },
+        { "x": 8, "y": 0, "w": 2, "h": 3, "i": "4", resizable: false, draggable: false, static: false },
+        { "x": 10, "y": 0, "w": 2, "h": 3, "i": "5", resizable: false, draggable: false, static: false },
+        { "x": 0, "y": 5, "w": 2, "h": 5, "i": "6", resizable: false, draggable: false, static: false },
+        { "x": 2, "y": 5, "w": 2, "h": 5, "i": "7", resizable: false, draggable: false, static: false },
+        { "x": 4, "y": 5, "w": 2, "h": 5, "i": "8", resizable: false, draggable: false, static: false },
+        { "x": 6, "y": 3, "w": 2, "h": 4, "i": "9", resizable: false, draggable: false, static: false },
+        { "x": 8, "y": 4, "w": 2, "h": 4, "i": "10", resizable: false, draggable: false, static: false },
+        { "x": 10, "y": 4, "w": 2, "h": 4, "i": "11", resizable: false, draggable: false, static: false },
+        { "x": 0, "y": 10, "w": 2, "h": 5, "i": "12", resizable: false, draggable: false, static: false },
+        { "x": 2, "y": 10, "w": 2, "h": 5, "i": "13", resizable: false, draggable: false, static: false },
+        { "x": 4, "y": 8, "w": 2, "h": 4, "i": "14", resizable: false, draggable: false, static: false },
+        { "x": 6, "y": 8, "w": 2, "h": 4, "i": "15", resizable: false, draggable: false, static: false },
+        { "x": 8, "y": 10, "w": 2, "h": 5, "i": "16", resizable: false, draggable: false, static: false },
+        { "x": 10, "y": 4, "w": 2, "h": 2, "i": "17", resizable: false, draggable: false, static: false },
+        { "x": 0, "y": 9, "w": 2, "h": 3, "i": "18", resizable: false, draggable: false, static: false },
+        { "x": 2, "y": 6, "w": 2, "h": 2, "i": "19", resizable: false, draggable: false, static: false }
     ];
 
     export default {
@@ -137,7 +151,7 @@
             TestElement,
             CustomDragElement,
         },
-        data () {
+        data() {
             return {
                 layout: JSON.parse(JSON.stringify(testLayout)),
                 layout2: JSON.parse(JSON.stringify(testLayout)),
@@ -155,40 +169,45 @@
             this.index = this.layout.length;
         },
         methods: {
-            clicked: function() {
+            handleDrop (e) {
+            },
+            dragstart (event) {
+                console.log(event);
+            },
+            clicked: function () {
                 window.alert("CLICK!");
             },
-            increaseWidth: function() {
+            increaseWidth: function () {
                 let width = document.getElementById("content").offsetWidth;
                 width += 20;
-                document.getElementById("content").style.width = width+"px";
+                document.getElementById("content").style.width = width + "px";
             },
-            decreaseWidth: function() {
+            decreaseWidth: function () {
                 let width = document.getElementById("content").offsetWidth;
                 width -= 20;
-                document.getElementById("content").style.width = width+"px";
+                document.getElementById("content").style.width = width + "px";
             },
-            removeItem: function(item) {
+            removeItem: function (item) {
                 //console.log("### REMOVE " + item.i);
                 this.layout.splice(this.layout.indexOf(item), 1);
             },
-            addItem: function() {
+            addItem: function () {
                 // let self = this;
                 //console.log("### LENGTH: " + this.layout.length);
-                let item = {"x":0,"y":0,"w":2,"h":2,"i":this.index+"", whatever: "bbb"};
+                let item = { "x": 0, "y": 0, "w": 2, "h": 2, "i": this.index + "", whatever: "bbb" };
                 this.index++;
                 this.layout.push(item);
             },
-            move: function(i, newX, newY){
+            move: function (i, newX, newY) {
                 console.log("MOVE i=" + i + ", X=" + newX + ", Y=" + newY);
             },
-            resize: function(i, newH, newW, newHPx, newWPx){
+            resize: function (i, newH, newW, newHPx, newWPx) {
                 console.log("RESIZE i=" + i + ", H=" + newH + ", W=" + newW + ", H(px)=" + newHPx + ", W(px)=" + newWPx);
             },
-            moved: function(i, newX, newY){
+            moved: function (i, newX, newY) {
                 console.log("### MOVED i=" + i + ", X=" + newX + ", Y=" + newY);
             },
-            resized: function(i, newH, newW, newHPx, newWPx){
+            resized: function (i, newH, newW, newHPx, newWPx) {
                 console.log("### RESIZED i=" + i + ", H=" + newH + ", W=" + newW + ", H(px)=" + newHPx + ", W(px)=" + newWPx);
             },
             /**
@@ -206,19 +225,19 @@
                 //eventBus.$emit('directionchange');
             },
 
-            layoutCreatedEvent: function(newLayout){
+            layoutCreatedEvent: function (newLayout) {
                 console.log("Created layout: ", newLayout)
             },
-            layoutBeforeMountEvent: function(newLayout){
+            layoutBeforeMountEvent: function (newLayout) {
                 console.log("beforeMount layout: ", newLayout)
             },
-            layoutMountedEvent: function(newLayout){
+            layoutMountedEvent: function (newLayout) {
                 console.log("Mounted layout: ", newLayout)
             },
-            layoutReadyEvent: function(newLayout){
+            layoutReadyEvent: function (newLayout) {
                 console.log("Ready layout: ", newLayout)
             },
-            layoutUpdatedEvent: function(newLayout){
+            layoutUpdatedEvent: function (newLayout) {
                 console.log("Updated layout: ", newLayout)
             },
 
@@ -256,12 +275,13 @@
 </style>
 
 <style lang="scss">
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  /*text-align: center;*/
-  color: #2c3e50;
-  /*margin-top: 60px;*/
-}
+    #app {
+        font-family: 'Avenir', Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        /*text-align: center;*/
+        color: #2c3e50;
+        /*margin-top: 60px;*/
+    }
 </style>
+

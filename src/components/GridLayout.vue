@@ -1,5 +1,5 @@
 <template>
-    <div ref="item" class="vue-grid-layout" :style="mergedStyle">
+    <div ref="item" class="vue-grid-layout" :style="mergedStyle" @drop="drop($event)" @dragover="allowdrag($event)">
         <slot></slot>
         <grid-item class="vue-grid-placeholder"
                    v-show="isDragging"
@@ -240,6 +240,14 @@
             },
         },
         methods: {
+            allowdrag (event) {
+                event.preventDefault();
+            },
+            drop (event) {
+                event.preventDefault()
+                this.$emit('Drop',123);
+
+            },
             layoutUpdate() {
                 if (this.layout !== undefined && this.originalLayout !== null) {
                     if (this.layout.length !== this.originalLayout.length) {
