@@ -3,6 +3,7 @@
          class="vue-grid-item"
          :class="classObj"
          :style="style"
+         @click="handleClick"
     >
         <slot></slot>
         <span v-if="resizableAndNotStatic" ref="handle" :class="resizableHandleClass"></span>
@@ -413,6 +414,11 @@
             }
         },
         methods: {
+
+            handleClick () {
+                this.$emit('Click')
+            },
+
             createStyle: function () {
                 if (this.x + this.w > this.cols) {
                     this.innerX = 0;

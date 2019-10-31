@@ -63,6 +63,7 @@
                            @move="move"
                            @resized="resized"
                            @moved="moved"
+                           @Click="handleClick"
                 >
                     <!--<custom-drag-element :text="item.i"></custom-drag-element>-->
                     <test-element :text="item.i"></test-element>
@@ -169,6 +170,8 @@
             this.index = this.layout.length;
         },
         methods: {
+            handleClick (e) {
+            },
             handleDrop (e) {
             },
             dragstart (event) {
